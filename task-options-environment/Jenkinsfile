@@ -1,1 +1,51 @@
+pipeline {
 
+    agent {
+        label 'slave01'
+    }
+
+    options {
+
+        buildDiscarder(logRotator(
+            numToKeepStr: '3',
+            artifactDaysToKeepStr: '7'
+        ))
+
+        timeout(time: 5, unit: 'MINUTES')
+
+        timestamps()
+    }
+
+    environment {
+        APP_NAME = 'MyApplication'
+        APP_ENV = 'TEST'
+    }
+
+    stages {
+
+        stage('Show environment variables') {
+            steps {
+                echo "Application name: ${APP_NAME}"
+                echo "Environment: ${APP_ENV}"
+            }
+        }
+
+        stage('Test timeout') {
+
+            options {
+                timeout(time: 30, unit: 'SECONDS')
+            }
+
+            steps {
+                echo 'Sleeping for 60 seconds'
+                sh 'sleep 60'
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
