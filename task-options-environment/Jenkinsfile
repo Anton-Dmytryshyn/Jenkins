@@ -1,44 +1,38 @@
 pipeline {
+    agent any  // Use any available agent
 
-    agent {
-        label 'slave01'
-    }
-
-    environment {
-        IMAGE_NAME = 'ghcr.io/anton-dmytryshyn/my-tools:1.0'
+    parameters {
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'stage', 'demo', 'prod'], description: 'Select environment to deploy')
     }
 
     stages {
 
-        stage('Docker build') {
+        stage('Stage 1 - When Demo') {
+            when {
+                expression { params.ENVIRONMENT == 'demo' } // Only run if demo is selected
+            }
             steps {
-                sh '''
-                    docker build -t $IMAGE_NAME docker-image-pipeline
-                '''
+                echo "Deployment on ${params.ENVIRONMENT}" // Print environment
             }
         }
 
-        stage('Docker login') {
+        stage('Stage 2 - Script Condition') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'github_access_for_jenkins_anton_dmytryshyn',
-                    usernameVariable: 'USERNAME',
-                    passwordVariable: 'TOKEN'
-                )]) {
-
-                    sh '''
-                        echo $TOKEN | docker login ghcr.io -u $USERNAME --password-stdin
-                    '''
+                script {
+                    if (params.ENVIRONMENT == 'prod') { // Conditional logic inside script
+                        echo "Deployment on ${params.ENVIRONMENT}" 
+                    } else {
+                        echo "Skipping deployment on ${params.ENVIRONMENT}" 
+                    }
                 }
             }
         }
 
-        stage('Docker push') {
-            steps {
-                sh '''
-                    docker push $IMAGE_NAME
-                '''
-            }
+    }
+
+    post {
+        always {
+            echo "Pipeline finished"
         }
     }
 }
