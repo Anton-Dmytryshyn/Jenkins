@@ -1,0 +1,15 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'UPSTREAM_VAR', defaultValue: 'DefaultValue', description: 'Variable from upstream')
+    }
+
+    stages {
+        stage('Use Upstream Variable') {
+            steps {
+                echo "Received variable from upstream: ${params.UPSTREAM_VAR}"
+            }
+        }
+    }
+}
