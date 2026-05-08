@@ -10,12 +10,6 @@ pipeline {
 
     stages {
 
-        stage('Clone repository') {
-            steps {
-                git 'https://github.com/Anton-Dmytryshyn/Jenkins.git'
-            }
-        }
-
         stage('Docker build') {
             steps {
                 sh '''
