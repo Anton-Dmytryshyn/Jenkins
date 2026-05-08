@@ -21,7 +21,7 @@ pipeline {
         stage('Docker login') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'github-token',
+                    credentialsId: 'github_access_for_jenkins_anton_dmytryshyn',
                     usernameVariable: 'USERNAME',
                     passwordVariable: 'TOKEN'
                 )]) {
