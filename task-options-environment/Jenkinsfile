@@ -4,48 +4,47 @@ pipeline {
         label 'slave01'
     }
 
-    options {
-
-        buildDiscarder(logRotator(
-            numToKeepStr: '3',
-            artifactDaysToKeepStr: '7'
-        ))
-
-        timeout(time: 5, unit: 'MINUTES')
-
-        timestamps()
-    }
-
     environment {
-        APP_NAME = 'MyApplication'
-        APP_ENV = 'TEST'
+        IMAGE_NAME = 'ghcr.io/anton-dmytryshyn/my-tools:1.0'
     }
 
     stages {
 
-        stage('Show environment variables') {
+        stage('Clone repository') {
             steps {
-                echo "Application name: ${APP_NAME}"
-                echo "Environment: ${APP_ENV}"
+                git 'https://github.com/Anton-Dmytryshyn/Jenkins.git'
             }
         }
 
-        stage('Test timeout') {
-
-            options {
-                timeout(time: 30, unit: 'SECONDS')
-            }
-
+        stage('Docker build') {
             steps {
-                echo 'Sleeping for 60 seconds'
-                sh 'sleep 60'
+                sh '''
+                    docker build -t $IMAGE_NAME docker-image-pipeline
+                '''
             }
         }
-    }
 
-    post {
-        always {
-            cleanWs()
+        stage('Docker login') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-token',
+                    usernameVariable: 'USERNAME',
+                    passwordVariable: 'TOKEN'
+                )]) {
+
+                    sh '''
+                        echo $TOKEN | docker login ghcr.io -u $USERNAME --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Docker push') {
+            steps {
+                sh '''
+                    docker push $IMAGE_NAME
+                '''
+            }
         }
     }
 }
