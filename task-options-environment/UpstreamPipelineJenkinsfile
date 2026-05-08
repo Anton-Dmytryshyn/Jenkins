@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+
+    environment {
+        MY_VAR = 'HelloDownstream'  // Example variable to pass downstream
+    }
+
+    stages {
+        stage('Failing Stage') {
+            steps {
+                echo "This stage will fail intentionally"
+                sh 'exit 1'  // Force failure
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo "Stage failed! Triggering downstream pipeline..."
+            // Trigger downstream pipeline and pass variable
+            build job: 'DownstreamPipeline', parameters: [
+                string(name: 'UPSTREAM_VAR', value: "${env.MY_VAR}")
+            ]
+        }
+    }
+}
